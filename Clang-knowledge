@@ -1,7 +1,0 @@
-# ncurses.hをインクルードした際のGCCエラー
-/usr/bin/ld: /tmp/ccgzg115.o: warning: relocation against `stdscr' in read-only section `.text'
--> GCCコンパイル時に"-lncurses"オプションを付ける
-　https://www.reddit.com/r/cprogramming/comments/lvyvvx/comment/gpegvpw/
-
-
-

@@ -1,0 +1,18 @@
+# ncurses.hをインクルードした際のGCCエラー
+/usr/bin/ld: /tmp/ccgzg115.o: warning: relocation against `stdscr' in read-only section `.text'
+-> GCCコンパイル時に"-lncurses"オプションを付ける
+　https://www.reddit.com/r/cprogramming/comments/lvyvvx/comment/gpegvpw/
+
+
+# ncursesライブラリのチュートリアル
+[Youtube]Ncurses Tutorial 0 - Hello World (initscr, endwin, refresh, getch, printw)
+https://www.youtube.com/watch?v=lV-OPQhPvSM&t=178s
+
+[blog]curses による端末制御
+https://www.kushiro-ct.ac.jp/yanagawa/ex-2017/2-game/01.html#hello1
+
+[blog]GCCの特殊なライブラリ
+https://dev.grapecity.co.jp/support/powernews/column/clang/048/page01.htm
+
+[blog]cursesライブラリによる画面制御
+http://www5d.biglobe.ne.jp/~kobamasa/comp/Linux/tips/curses.html
