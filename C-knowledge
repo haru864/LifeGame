@@ -16,3 +16,13 @@ https://dev.grapecity.co.jp/support/powernews/column/clang/048/page01.htm
 
 [blog]cursesライブラリによる画面制御
 http://www5d.biglobe.ne.jp/~kobamasa/comp/Linux/tips/curses.html
+
+# g++コンパイルエラー
+warning: format not a string literal and no format arguments [-Wformat-security]
+-> https://www.cqpub.co.jp/interface/column/freesoft/2003/200308/3.htm
+   printf系の関数の引数に、他の関数の返り値を指定すると発生する。
+   引数がstring型であることを保証する必要があるので、書式指定子を利用して以下のように記述する。
+   printf(var) -> printf("%s",var)
+
+
+
