@@ -10,8 +10,7 @@
             "request": "launch",
             "program": "/home/haruta/work/Project/lifegame/idea/prototype/main",
             "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal",
-            "stopOnEntry": false,
+            "externalConsole": true
         }
     ]
 }

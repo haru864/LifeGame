@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <ncurses.h>
 #include <vector>
 
@@ -30,11 +31,15 @@ string MESSAGES_CYCLE[3] = {"Game of Life started.",
 // 死亡 -> .
 // カーソル -> o
 
-bool moveCursor(char c, int y, int x);
+void printCells();
+void printUserGuide();
+bool getKeyInput();
+void movePosition(char);
 void checkCoordinate();
+
 void initCells();
-void initCells(int y, int x);
-int getAdjacentLivesCount(int y, int x);
+void initCells(int, int);
+int getAdjacentLivesCount(int, int);
 
 int main()
 {
@@ -58,62 +63,26 @@ int main()
 
     while (true)
     {
-        resize_term(yMax, xMax);
-
         // print cells on screen
-        for (int y = 0; y < GAME_SCREEN_HEIGHT; y++)
-        {
-            for (int x = 0; x < GAME_SCREEN_WIDTH; x++)
-            {
-                // if (x == CURSOR_X && y == CURSOR_Y)
-                // {
-                //     mvprintw(y, x, "o");
-                // }
-                // else if (CELLS.at(y).at(x) > 0)
-                // {
-                //     mvprintw(y, x, "#");
-                // }
-                // else
-                // {
-                //     mvprintw(y, x, ".");
-                // }
-                if ((x == CURSOR_X && y == CURSOR_Y) && (GAME_MODE == OPERATION_MODE))
-                {
-                    mvprintw(y, x, "*");
-                }
-                else
-                {
-                    mvprintw(y, x, "%s", to_string(CELLS.at(y).at(x)).c_str());
-                }
-            }
-        }
+        printCells();
 
-        // print explanation
-        int pos_y, pos_x;
-        for (int i = 0; i < MAX_COMMENT_ROW; i++)
-        {
-            auto messages = (GAME_MODE == OPERATION_MODE ? MESSAGES_OPERATION : MESSAGES_CYCLE);
-            move(GAME_SCREEN_HEIGHT + i, 0);
-            clrtoeol();
-            if (messages[i].c_str() != NULL)
-            {
-                printw("%s", messages[i].c_str());
-                getyx(stdscr, pos_y, pos_x);
-            }
-        }
-        move(pos_y, pos_x);
+        // tell what key is available
+        printUserGuide();
 
-        // when detect key pushed, move cursor or revive cell
-        if (moveCursor((char)getch(), CURSOR_Y, CURSOR_X) == false)
+        // drawing cells, messages on screen
+        refresh();
+
+        // waiting for key pushed
+        if (!getKeyInput())
         {
             break;
         }
 
         // if life-cycle started, draw cells slowly
-        if (GAME_MODE == CYCLE_MODE)
-        {
-            system("sleep 1 > /dev/null &");
-        }
+        // if (GAME_MODE == CYCLE_MODE)
+        // {
+        //     sleep(1);
+        // }
     }
 
     // close screen
@@ -123,12 +92,77 @@ int main()
     return EXIT_SUCCESS;
 }
 
-bool moveCursor(char c, int y, int x)
+void printCells()
 {
-    if ((GAME_MODE != OPERATION_MODE) && (c != 'q'))
-        return true;
+    for (int y = 0; y < GAME_SCREEN_HEIGHT; y++)
+    {
+        for (int x = 0; x < GAME_SCREEN_WIDTH; x++)
+        {
+            // if (x == CURSOR_X && y == CURSOR_Y)
+            // {
+            //     mvprintw(y, x, "o");
+            // }
+            // else if (CELLS.at(y).at(x) > 0)
+            // {
+            //     mvprintw(y, x, "#");
+            // }
+            // else
+            // {
+            //     mvprintw(y, x, ".");
+            // }
+            if ((x == CURSOR_X && y == CURSOR_Y) && (GAME_MODE == OPERATION_MODE))
+            {
+                mvprintw(y, x, "*");
+            }
+            else
+            {
+                mvprintw(y, x, "%s", to_string(CELLS.at(y).at(x)).c_str());
+            }
+        }
+    }
+}
 
-    switch (c)
+void printUserGuide()
+{
+    int pos_y, pos_x;
+    for (int i = 0; i < MAX_COMMENT_ROW; i++)
+    {
+        auto messages = (GAME_MODE == OPERATION_MODE ? MESSAGES_OPERATION : MESSAGES_CYCLE);
+        move(GAME_SCREEN_HEIGHT + i, 0);
+        clrtoeol();
+        if (messages[i].c_str() != NULL)
+        {
+            printw("%s", messages[i].c_str());
+            getyx(stdscr, pos_y, pos_x);
+        }
+    }
+    move(pos_y, pos_x);
+}
+
+bool getKeyInput()
+{
+    char keyInput = getchar();
+
+    if (keyInput == 'q')
+    {
+        return false;
+    }
+
+    if (GAME_MODE == OPERATION_MODE)
+    {
+        movePosition(keyInput);
+    }
+    else if (GAME_MODE == CYCLE_MODE)
+    {
+        // make cells living or dead
+    }
+
+    return true;
+}
+
+void movePosition(char key)
+{
+    switch (key)
     {
     case 'w':
         CURSOR_Y--;
@@ -143,24 +177,16 @@ bool moveCursor(char c, int y, int x)
         CURSOR_X++;
         break;
     case ' ':
-        // mvprintw(GAME_SCREEN_HEIGHT, GAME_SCREEN_WIDTH - 40, "y:%s x:%s", to_string(y).c_str(), to_string(x).c_str());
-        CELLS.at(y).at(x) = 1;
-        break;
-    case 'q':
-        return false;
+        CELLS.at(CURSOR_Y).at(CURSOR_X) = 1;
         break;
     case 'b':
         GAME_MODE = CYCLE_MODE;
-        return true;
         break;
     default:
         break;
     }
 
     checkCoordinate();
-    initCells(CURSOR_Y, CURSOR_X);
-
-    return true;
 }
 
 void checkCoordinate()
