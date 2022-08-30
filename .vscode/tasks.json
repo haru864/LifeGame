@@ -9,7 +9,8 @@
                 "-o",
                 "main",
                 "-lncurses",
-                "-g"
+                "-g",
+                "-Wall"
             ],
             "options": {
                 "cwd": "${fileDirname}"

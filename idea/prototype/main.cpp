@@ -23,7 +23,7 @@ string MESSAGES_OPERATION[4] = {"Push 'W', 'A', 'S', or 'D' to move your cursor.
                                 "Push SPACE to revive cell, 'B' to start life-cycle.",
                                 "If you want to quit game, please push 'Q'.",
                                 "> "};
-string MESSAGES_CYCLE[3] = {"Game of Life started.",
+string MESSAGES_CYCLE[3] = {"Game of Life started, push RETURN to circulate life and death.",
                             "If you want to quit game, then push 'Q'.",
                             "> "};
 
@@ -34,11 +34,10 @@ string MESSAGES_CYCLE[3] = {"Game of Life started.",
 void printCells();
 void printUserGuide();
 bool getKeyInput();
-void movePosition(char);
+void movePosition(unsigned char);
 void checkCoordinate();
-
 void initCells();
-void initCells(int, int);
+void judgeDeadOrAlive();
 int getAdjacentLivesCount(int, int);
 
 int main()
@@ -48,18 +47,10 @@ int main()
 
     int yMax, xMax;
     getmaxyx(stdscr, yMax, xMax);
-    // GAME_SCREEN_HEIGHT = yMax - MAX_COMMENT_ROW;
-    // GAME_SCREEN_WIDTH = xMax;
-    GAME_SCREEN_HEIGHT = 5;
-    GAME_SCREEN_WIDTH = 5;
+    GAME_SCREEN_HEIGHT = yMax - MAX_COMMENT_ROW;
+    GAME_SCREEN_WIDTH = xMax;
 
     initCells();
-    // mvprintw(GAME_SCREEN_HEIGHT, GAME_SCREEN_WIDTH - 30, "%s", to_string(yMax).c_str());
-    // mvprintw(GAME_SCREEN_HEIGHT, GAME_SCREEN_WIDTH - 25, "%s", to_string(xMax).c_str());
-    // mvprintw(GAME_SCREEN_HEIGHT, GAME_SCREEN_WIDTH - 20, "%s", to_string(GAME_SCREEN_HEIGHT).c_str());
-    // mvprintw(GAME_SCREEN_HEIGHT, GAME_SCREEN_WIDTH - 15, "%s", to_string(GAME_SCREEN_WIDTH).c_str());
-    // mvprintw(GAME_SCREEN_HEIGHT, GAME_SCREEN_WIDTH - 10, "%s", to_string(CELLS.size()).c_str());
-    // mvprintw(GAME_SCREEN_HEIGHT, GAME_SCREEN_WIDTH - 5, "%s", to_string(CELLS.at(0).size()).c_str());
 
     while (true)
     {
@@ -98,26 +89,26 @@ void printCells()
     {
         for (int x = 0; x < GAME_SCREEN_WIDTH; x++)
         {
-            // if (x == CURSOR_X && y == CURSOR_Y)
-            // {
-            //     mvprintw(y, x, "o");
-            // }
-            // else if (CELLS.at(y).at(x) > 0)
-            // {
-            //     mvprintw(y, x, "#");
-            // }
-            // else
-            // {
-            //     mvprintw(y, x, ".");
-            // }
-            if ((x == CURSOR_X && y == CURSOR_Y) && (GAME_MODE == OPERATION_MODE))
+            if (GAME_MODE == OPERATION_MODE && x == CURSOR_X && y == CURSOR_Y)
             {
-                mvprintw(y, x, "*");
+                mvprintw(y, x, "o");
+            }
+            else if (CELLS.at(y).at(x) > 0)
+            {
+                mvprintw(y, x, "#");
             }
             else
             {
-                mvprintw(y, x, "%s", to_string(CELLS.at(y).at(x)).c_str());
+                mvprintw(y, x, ".");
             }
+            // if ((x == CURSOR_X && y == CURSOR_Y) && (GAME_MODE == OPERATION_MODE))
+            // {
+            //     mvprintw(y, x, "*");
+            // }
+            // else
+            // {
+            //     mvprintw(y, x, "%s", to_string(CELLS.at(y).at(x)).c_str());
+            // }
         }
     }
 }
@@ -141,7 +132,7 @@ void printUserGuide()
 
 bool getKeyInput()
 {
-    char keyInput = getchar();
+    unsigned char keyInput = getchar();
 
     if (keyInput == 'q')
     {
@@ -150,17 +141,19 @@ bool getKeyInput()
 
     if (GAME_MODE == OPERATION_MODE)
     {
+        // move cursor within range
         movePosition(keyInput);
     }
-    else if (GAME_MODE == CYCLE_MODE)
+    else if ((GAME_MODE == CYCLE_MODE) && (keyInput == 13))
     {
-        // make cells living or dead
+        // when RETURN is pushed, make cells living or dead
+        judgeDeadOrAlive();
     }
 
     return true;
 }
 
-void movePosition(char key)
+void movePosition(unsigned char key)
 {
     switch (key)
     {
@@ -207,7 +200,7 @@ void initCells()
     CELLS.resize(GAME_SCREEN_HEIGHT, vector<int>(GAME_SCREEN_WIDTH, 0));
 }
 
-void initCells(int y, int x)
+void judgeDeadOrAlive()
 {
     vector<vector<int>> tempVec;
     tempVec.resize(GAME_SCREEN_HEIGHT, vector<int>(GAME_SCREEN_WIDTH, 0));
@@ -216,12 +209,8 @@ void initCells(int y, int x)
     {
         for (int curr_x = 0; curr_x < GAME_SCREEN_WIDTH; curr_x++)
         {
-            if ((curr_y == y) && (curr_x == x))
-            {
-                tempVec.at(curr_y).at(curr_x) = CELLS.at(curr_y).at(curr_x);
-            }
             // 誕生：死んでいるセルに隣接する生きたセルがちょうど3つあれば、次の世代が誕生する。
-            else if ((CELLS.at(curr_y).at(curr_x) == 0) && (getAdjacentLivesCount(curr_y, curr_x) == 3))
+            if ((CELLS.at(curr_y).at(curr_x) == 0) && (getAdjacentLivesCount(curr_y, curr_x) == 3))
             {
                 tempVec.at(curr_y).at(curr_x) = 1;
             }
@@ -240,28 +229,9 @@ void initCells(int y, int x)
             {
                 tempVec.at(curr_y).at(curr_x) = 0;
             }
-            else
-            {
-                tempVec.at(curr_y).at(curr_x) = CELLS.at(curr_y).at(curr_x);
-            }
-        }
-    }
-    for (int i = 0; i < GAME_SCREEN_HEIGHT; i++)
-    {
-        for (int j = 0; j < GAME_SCREEN_WIDTH; j++)
-        {
-            mvprintw(i, j + 10, "%s", to_string(CELLS.at(i).at(j)).c_str());
-            mvprintw(i, j + 20, "%s", to_string(tempVec.at(i).at(j)).c_str());
         }
     }
     CELLS = tempVec;
-    for (int i = 0; i < GAME_SCREEN_HEIGHT; i++)
-    {
-        for (int j = 0; j < GAME_SCREEN_WIDTH; j++)
-        {
-            mvprintw(i, j + 30, "%s", to_string(CELLS.at(i).at(j)).c_str());
-        }
-    }
 }
 
 int getAdjacentLivesCount(int y, int x)
