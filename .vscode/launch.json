@@ -8,7 +8,7 @@
             "name": "C++ Launch (Ubuntu)",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/haruta/work/Project/lifegame/idea/prototype/main",
+            "program": "${fileDirname}/${fileBasenameNoExtension}",
             "cwd": "${workspaceFolder}",
             "externalConsole": true
         }
