@@ -27,3 +27,9 @@ and make any cells come alive by pushing SPACE.
 In cycle mode, cells are increasing or decreasing according to rule of Game of Life.
 
 In both operation, player can quit game immediately by pushing 'Q'.
+
+## OPERATION MODE
+![Screenshot from 2022-09-04 22-48-55](https://user-images.githubusercontent.com/45516420/188317228-0737da7a-4462-4336-9e59-bf2c2050034d.png)
+
+## CYCLE MODE
+![Screenshot from 2022-09-04 22-50-33](https://user-images.githubusercontent.com/45516420/188317205-3ad5e6a0-2c2a-4860-8490-48b8d896a693.png)
