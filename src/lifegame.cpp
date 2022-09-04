@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     init(argc, argv);
 
     // multi threading, one thread is printting cells and guidance,
-    // another thread is processing keyboard inout
+    // another thread is processing keyboard input
     std::thread printScreenWorker(printScreen);
     std::thread readKeyWorker(readKey);
     printScreenWorker.join();
