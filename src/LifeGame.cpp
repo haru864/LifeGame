@@ -6,8 +6,7 @@
 #include <ncurses.h>
 #include <vector>
 #include <unistd.h>
-
-using namespace std;
+#include <thread>
 
 #define OPERATION_MODE 0
 #define CYCLE_MODE 1
@@ -19,24 +18,26 @@ int GAME_SCREEN_WIDTH;
 int GAME_SCREEN_HEIGHT;
 int CURSOR_X = 0;
 int CURSOR_Y = 0;
-vector<vector<int>> CELLS;
+std::vector<std::vector<int>> CELLS;
 const int MAX_COMMENT_ROW = 4;
-string MESSAGES_OPERATION[4] = {"Push 'W', 'A', 'S', or 'D' to move your cursor.",
-                                "Push SPACE to revive cell, 'B' to start life-cycle.",
-                                "If you want to quit game, please push 'Q'.",
-                                "> "};
-string MESSAGES_CYCLE[3] = {"Game of Life started, push RETURN to circulate life and death.",
-                            "If you want to quit game, then push 'Q'.",
-                            "> "};
+std::string MESSAGES_OPERATION[4] = {"Push 'W', 'A', 'S', or 'D' to move your cursor.",
+                                     "Push SPACE to revive cell, 'B' to start life-cycle.",
+                                     "If you want to quit game, please push 'Q'.",
+                                     "> "};
+std::string MESSAGES_CYCLE[3] = {"Game of Life started, cells increase or decrease automatically.",
+                                 "If you want to quit game, then push 'Q'.",
+                                 "> "};
 
 // 生存 -> #
 // 死亡 -> .
 // カーソル -> o
 
 void init(int, char **);
-void printCells();
+void printScreen();
 void printUserGuide();
-bool getKeyInput();
+void printCells();
+void readKey();
+void getKeyInput();
 void movePosition(unsigned char);
 void checkCoordinate();
 void initCells();
@@ -48,20 +49,12 @@ int main(int argc, char *argv[])
     // intialize game screen size
     init(argc, argv);
 
-    while (true)
-    {
-        // print cells on screen
-        printCells();
-
-        // tell what key is available
-        printUserGuide();
-
-        // wait and reflect keyboard input
-        if (!getKeyInput())
-        {
-            break;
-        }
-    }
+    // multi threading, one thread is printting cells and guidance,
+    // another thread is processing keyboard inout
+    std::thread printScreenWorker(printScreen);
+    std::thread readKeyWorker(readKey);
+    printScreenWorker.join();
+    readKeyWorker.join();
 
     // close screen
     endwin();
@@ -98,14 +91,37 @@ void init(int argc, char *argv[])
             width = atoi(optarg);
             break;
         case '?':
+            endwin();
             exit(1);
         }
     }
 
     // determine screen size
-    GAME_SCREEN_HEIGHT = height > 0 ? min(height, maxHeight) : maxHeight;
-    GAME_SCREEN_WIDTH = width > 0 ? min(width, maxWidth) : maxWidth;
+    GAME_SCREEN_HEIGHT = height > 0 ? std::min(height, maxHeight) : maxHeight;
+    GAME_SCREEN_WIDTH = width > 0 ? std::min(width, maxWidth) : maxWidth;
+
     initCells();
+}
+
+void printScreen()
+{
+    while (true)
+    {
+        // when GAME_MODE id CYCLE_MODE, then making cells alive or dead
+        if (GAME_MODE == CYCLE_MODE)
+        {
+            judgeDeadOrAlive();
+
+            // pause for 0.5 sec, to make it easy to see how cells are increasing/decreasing
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        }
+
+        // print alive or dead cell
+        printCells();
+
+        // print how to play
+        printUserGuide();
+    }
 }
 
 void printCells()
@@ -139,6 +155,15 @@ void printCells()
     refresh();
 }
 
+void readKey()
+{
+    while (true)
+    {
+        // wait and reflect keyboard input
+        getKeyInput();
+    }
+}
+
 void printUserGuide()
 {
     int pos_y, pos_x;
@@ -157,13 +182,17 @@ void printUserGuide()
     refresh();
 }
 
-bool getKeyInput()
+void getKeyInput()
 {
     unsigned char keyInput = getchar();
 
     if (keyInput == 'q')
     {
-        return false;
+        // close screen
+        endwin();
+        printf("Thank you for playing!\n");
+        fflush(stdout);
+        exit(0);
     }
 
     if (GAME_MODE == OPERATION_MODE)
@@ -171,13 +200,6 @@ bool getKeyInput()
         // move cursor within range
         movePosition(keyInput);
     }
-    else if ((GAME_MODE == CYCLE_MODE) && (keyInput == 13))
-    {
-        // when RETURN is pushed, make cells living or dead
-        judgeDeadOrAlive();
-    }
-
-    return true;
 }
 
 void movePosition(unsigned char key)
@@ -224,13 +246,13 @@ void checkCoordinate()
 
 void initCells()
 {
-    CELLS.resize(GAME_SCREEN_HEIGHT, vector<int>(GAME_SCREEN_WIDTH, 0));
+    CELLS.resize(GAME_SCREEN_HEIGHT, std::vector<int>(GAME_SCREEN_WIDTH, 0));
 }
 
 void judgeDeadOrAlive()
 {
-    vector<vector<int>> tempVec;
-    tempVec.resize(GAME_SCREEN_HEIGHT, vector<int>(GAME_SCREEN_WIDTH, 0));
+    std::vector<std::vector<int>> tempVec;
+    tempVec.resize(GAME_SCREEN_HEIGHT, std::vector<int>(GAME_SCREEN_WIDTH, 0));
 
     for (int curr_y = 0; curr_y < GAME_SCREEN_HEIGHT; curr_y++)
     {
